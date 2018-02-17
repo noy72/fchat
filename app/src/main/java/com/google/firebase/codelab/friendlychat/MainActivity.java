@@ -162,6 +162,15 @@ public class MainActivity extends AppCompatActivity implements
         mLinearLayoutManager.setStackFromEnd(true);
 
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
+        mFirebaseDatabaseReference
+                .child("User")
+                .child(mFirebaseUser.getUid())
+                .setValue(new User(
+                        mFirebaseUser.getUid(),
+                        mFirebaseUser.getEmail(),
+                        mFirebaseUser.getDisplayName()
+                ));
+
 
         SnapshotParser<FriendlyMessage> parser = new SnapshotParser<FriendlyMessage>() {
             @Override
