@@ -22,11 +22,13 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.InputFilter;
+import android.text.Layout;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -38,6 +40,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -126,6 +129,8 @@ public class MainActivity extends AppCompatActivity implements
     private AdView mAdView;
     private FirebaseRemoteConfig mFirebaseRemoteConfig;
     private GoogleApiClient mGoogleApiClient;
+    private DrawerLayout mDrawerLayout;
+    private LinearLayout mDrawerLinearLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -340,7 +345,11 @@ public class MainActivity extends AppCompatActivity implements
                 mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);
             }
         });
+
+        mDrawerLayout = findViewById(R.id.drawer_layout);
+        mDrawerLinearLayout = findViewById(R.id.navigation_drawer_layout);
     }
+
 
     private Action getMessageViewAction(FriendlyMessage friendlyMessage) {
         return new Action.Builder(Action.Builder.VIEW_ACTION)
