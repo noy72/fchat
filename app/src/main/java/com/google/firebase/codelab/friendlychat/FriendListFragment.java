@@ -1,8 +1,10 @@
 package com.google.firebase.codelab.friendlychat;
 
 
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.InputFilter;
@@ -40,22 +42,11 @@ public class FriendListFragment extends Fragment {
         // Required empty public constructor
     }
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
         mView = inflater.inflate(R.layout.fragment_friend_list, container, false);
-
-        //Button button  = mView.findViewById(R.id.searchButton);
-        //button.setOnClickListener(new View.OnClickListener() {
-
-        //    @Override
-        //    public void onClick(View view) {
-        //       Log.v("button:", "clicked!");
-        //    }
-        //});
-        // Inflate the layout for this fragment
         return mView;
     }
 
@@ -100,10 +91,14 @@ public class FriendListFragment extends Fragment {
                 ref.child(USER_CHILD).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        // TODO: I don't want to do a linear search.
+                        // TODO: Linear search is slow. There should be other good implementations.
+                        // TODO: Detect when the user has already registered in the friend list
+                        // TODO: Do not register oneself.
                         for (DataSnapshot data: dataSnapshot.getChildren()){
-                            if (mailAddress.equals(data.getValue(User.class).getMail())) {
-                                // TODO: display dialog
+                            User user = data.getValue(User.class);
+                            System.out.println(user.getMail());
+                            if (mailAddress.equals(user.getMail())) {
+                                showRegistrationDialog(user);
                                 return;
                             }
                         }
@@ -117,7 +112,35 @@ public class FriendListFragment extends Fragment {
                 });
             }
         });
-
-
     }
+
+
+    public void showRegistrationDialog(final User user) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setMessage("Do you register " + user.getName() + " in the friend list?")
+                .setTitle(R.string.friend_registration_dialog)
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        Bundle bundle = getArguments();
+                        String uid = bundle.getString("uid");
+                        DatabaseReference newRef = mDatabaseReference
+                                .child(FRIENDS_CHILD)
+                                .child(uid)
+                                .push();
+                        newRef.setValue(user.getUid());
+
+                        mMailAddress.getEditableText().clear();
+                        Toast.makeText(getContext(), "add " + user.getName(), Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        // do nothing
+                    }
+                });
+        builder.create().show();
+    }
+
 }
