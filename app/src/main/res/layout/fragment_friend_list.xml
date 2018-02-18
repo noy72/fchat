@@ -4,5 +4,11 @@
     android:layout_height="match_parent"
     tools:context="com.google.firebase.codelab.friendlychat.FriendListFragment">
 
+    <!-- TODO: Update blank fragment layout -->
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:text="Button" />
 
 </FrameLayout>
