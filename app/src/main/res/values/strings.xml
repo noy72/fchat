@@ -16,4 +16,9 @@
     <string name="navigation_menu_button_groups">Groups</string>
     <string name="drawer_open">open drawer</string>
     <string name="drawer_close">close drawer</string>
+    <string name="search_friend">Search by friend\'s email address.</string>
+    <string name="domain">\@gmail.com</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
