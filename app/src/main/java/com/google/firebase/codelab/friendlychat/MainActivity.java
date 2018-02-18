@@ -107,6 +107,7 @@ public class MainActivity extends AppCompatActivity implements
 
     private static final String TAG = "MainActivity";
     public static final String MESSAGES_CHILD = "messages";
+    public static final String USER_CHILD = "User";
     private static final int REQUEST_INVITE = 1;
     private static final int REQUEST_IMAGE = 2;
     public static final int DEFAULT_MSG_LENGTH_LIMIT = 10;
@@ -139,6 +140,7 @@ public class MainActivity extends AppCompatActivity implements
     private CharSequence mDrawerTitle;
     private CharSequence mTitle;
     private FragmentManager mFragmentManager;
+    // TODO: remove unused variable
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -176,7 +178,7 @@ public class MainActivity extends AppCompatActivity implements
 
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
         mFirebaseDatabaseReference
-                .child("User")
+                .child(USER_CHILD)
                 .child(mFirebaseUser.getUid())
                 .setValue(new User(
                         mFirebaseUser.getUid(),
@@ -371,12 +373,12 @@ public class MainActivity extends AppCompatActivity implements
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
                 R.string.drawer_open, R.string.drawer_close) {
 
-            /** Called when a drawer has settled in a completely closed state. */
+            /* Called when a drawer has settled in a completely closed state. */
             public void onDrawerClosed(View view) {
                 super.onDrawerClosed(view);
             }
 
-            /** Called when a drawer has settled in a completely open state. */
+            /* Called when a drawer has settled in a completely open state. */
             public void onDrawerOpened(View drawerView) {
                 super.onDrawerOpened(drawerView);
             }
@@ -392,6 +394,7 @@ public class MainActivity extends AppCompatActivity implements
         mFragmentManager = getSupportFragmentManager();
 
         // Generate click listener for navigation button.
+        //TODO: change ".add" to ".replace"
         findViewById(R.id.navigation_button_friends).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
