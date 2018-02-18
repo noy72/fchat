@@ -23,7 +23,6 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -370,6 +369,8 @@ public class MainActivity extends AppCompatActivity implements
 
         mTitle = mDrawerTitle = getTitle();
         mDrawerLayout = findViewById(R.id.drawer_layout);
+
+        //TODO: add function that to close navigationDrawer when pushing the button
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
                 R.string.drawer_open, R.string.drawer_close) {
 
@@ -399,9 +400,16 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public void onClick(View view) {
                 System.out.println("click");
-                FragmentTransaction fragmentTransaction = mFragmentManager.beginTransaction();
-                fragmentTransaction.add(R.id.fragment_container, new FriendListFragment());
-                fragmentTransaction.commit();
+
+                Bundle bundle = new Bundle();
+                bundle.putString("uid", mFirebaseUser.getUid());
+
+                FriendListFragment fragment = new FriendListFragment();
+                fragment.setArguments(bundle);
+
+                mFragmentManager.beginTransaction()
+                        .add(R.id.fragment_container, fragment)
+                        .commit();
             }
         });
         findViewById(R.id.navigation_button_groups).setOnClickListener(new View.OnClickListener() {
