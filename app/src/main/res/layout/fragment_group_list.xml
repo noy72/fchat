@@ -8,15 +8,16 @@
     tools:context="com.google.firebase.codelab.friendlychat.GroupListFragment">
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/recyclerView"
+        android:id="@+id/groupRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true" />
+        android:layout_alignParentTop="true"/>
+
     <Button
+        android:id="@+id/addButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:text="@string/add_new_group"
-        />
+        android:text="@string/add_new_group"/>
 
 </RelativeLayout>
