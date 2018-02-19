@@ -403,7 +403,6 @@ public class MainActivity extends AppCompatActivity implements
         mFragmentManager = getSupportFragmentManager();
 
         // Generate click listener for navigation button.
-        //TODO: change ".add" to ".replace"
         findViewById(R.id.navigation_button_friends).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -416,14 +415,22 @@ public class MainActivity extends AppCompatActivity implements
                 fragment.setArguments(bundle);
 
                 mFragmentManager.beginTransaction()
-                        .add(R.id.fragment_container, fragment)
+                        .replace(R.id.fragment_container, fragment)
                         .commit();
             }
         });
         findViewById(R.id.navigation_button_groups).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Bundle bundle = new Bundle();
+                bundle.putString("uid", mFirebaseUser.getUid());
 
+                GroupListFragment fragment = new GroupListFragment();
+                fragment.setArguments(bundle);
+
+                mFragmentManager.beginTransaction()
+                        .replace(R.id.fragment_container, fragment)
+                        .commit();
             }
         });
 
