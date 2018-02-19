@@ -7,6 +7,14 @@
     android:focusable="true"
     tools:context="com.google.firebase.codelab.friendlychat.GroupListFragment">
 
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyle"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
     <android.support.v7.widget.RecyclerView
         android:id="@+id/groupRecyclerView"
         android:layout_width="match_parent"

@@ -9,6 +9,8 @@ public class Group {
     String name;
     String joinUser;
 
+    public Group(){};
+
     public Group(long id, String name, String joinUser) {
         this.id = id;
         this.name = name;

@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -14,8 +15,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.firebase.ui.database.SnapshotParser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -35,12 +41,24 @@ public class GroupListFragment extends Fragment {
 
     private View mView; // for findViewById
     private RecyclerView mRecyclerView;
+    private FirebaseRecyclerAdapter<Group, GroupViewHolder> mFirebaseAdapter;
+    private LinearLayoutManager mLinearLayoutManager;
+    private ProgressBar mProgressBar;
     private Button mAddGroupButton;
     private FragmentManager mFragmentManager;
     private EditText mNewGroupName;
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mDatabaseReference;
     private String mUid;
+
+    public static class GroupViewHolder extends RecyclerView.ViewHolder {
+        TextView groupName;
+
+        public GroupViewHolder(View v) {
+            super(v);
+            groupName = itemView.findViewById(R.id.groupNameView);
+        }
+    }
 
     public GroupListFragment() {
         // Required empty public constructor
@@ -64,6 +82,8 @@ public class GroupListFragment extends Fragment {
         mNewGroupName = mView.findViewById(R.id.groupname);
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         mDatabaseReference = mFirebaseDatabase.getReference();
+        mLinearLayoutManager = new LinearLayoutManager(getContext());
+        mProgressBar = mView.findViewById(R.id.progressBar);
         setUid();
 
         mAddGroupButton.setOnClickListener(new View.OnClickListener() {
@@ -93,6 +113,58 @@ public class GroupListFragment extends Fragment {
             public void afterTextChanged(Editable editable) {
             }
         });
+
+        // New Child entries
+        SnapshotParser<Group> parser = new SnapshotParser<Group>() {
+            @Override
+            public Group parseSnapshot(DataSnapshot dataSnapshot) {
+                Group group = dataSnapshot.getValue(Group.class);
+                if (group != null) {
+                    // TODO: implement
+                    // group.setId();
+                }
+                return group;
+            }
+        };
+
+        DatabaseReference groupRef = mDatabaseReference.child(GROUP_CHILD);
+        FirebaseRecyclerOptions<Group> options = new FirebaseRecyclerOptions.Builder<Group>()
+                .setQuery(groupRef, parser)
+                .build();
+        mFirebaseAdapter = new FirebaseRecyclerAdapter<Group, GroupViewHolder>(options) {
+            @Override
+            protected void onBindViewHolder(final GroupViewHolder viewHolder, int position, Group group) {
+                mProgressBar.setVisibility(ProgressBar.INVISIBLE);
+                if (group.getName() != null) {
+                    viewHolder.groupName.setText(group.getName());
+                } else {
+                    // TODO: implement
+                }
+            }
+
+            @Override
+            public GroupViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+                LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
+                return new GroupViewHolder(inflater.inflate(R.layout.item_group, viewGroup, false));
+            }
+        };
+
+        mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                super.onItemRangeInserted(positionStart, itemCount);
+                int groupCount = mFirebaseAdapter.getItemCount();
+                int lastVisiblePosition = mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
+
+                boolean extract = positionStart >= groupCount - 1 && lastVisiblePosition == positionStart - 1;
+                if (lastVisiblePosition == -1 || extract) {
+                    mRecyclerView.scrollToPosition(positionStart);
+                }
+            }
+        });
+
+        mRecyclerView.setLayoutManager(mLinearLayoutManager);
+        mRecyclerView.setAdapter(mFirebaseAdapter);
     }
 
     private void setUid() {
@@ -138,5 +210,17 @@ public class GroupListFragment extends Fragment {
                 throw new RuntimeException("The read failed: " + databaseError.getCode());
             }
         });
+    }
+
+    @Override
+    public void onPause() {
+        mFirebaseAdapter.stopListening();
+        super.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mFirebaseAdapter.startListening();
     }
 }
