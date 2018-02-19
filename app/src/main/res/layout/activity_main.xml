@@ -25,7 +25,7 @@
         android:layout_height="match_parent"
         android:layout_below="@+id/adView">
 
-        <!-- The main content view -->
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
@@ -71,6 +71,11 @@
             </LinearLayout>
         </RelativeLayout>
 
+        <FrameLayout
+            android:id="@+id/fragment_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
         <!-- The navigation drawer -->
         <LinearLayout
             android:id="@+id/navigation_drawer_layout"
@@ -97,6 +102,7 @@
                 android:layout_marginBottom="5dp"
                 android:layout_height="50dp"/>
         </LinearLayout>
+
     </android.support.v4.widget.DrawerLayout>
 
     <ProgressBar
