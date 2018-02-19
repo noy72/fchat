@@ -51,15 +51,6 @@ public class GroupListFragment extends Fragment {
     private DatabaseReference mDatabaseReference;
     private String mUid;
 
-    public static class GroupViewHolder extends RecyclerView.ViewHolder {
-        TextView groupName;
-
-        public GroupViewHolder(View v) {
-            super(v);
-            groupName = itemView.findViewById(R.id.groupNameView);
-        }
-    }
-
     public GroupListFragment() {
         // Required empty public constructor
     }
@@ -136,16 +127,25 @@ public class GroupListFragment extends Fragment {
             protected void onBindViewHolder(final GroupViewHolder viewHolder, int position, Group group) {
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
                 if (group.getName() != null) {
-                    viewHolder.groupName.setText(group.getName());
+                    viewHolder.mGroupName.setText(group.getName());
                 } else {
                     // TODO: implement
                 }
             }
 
             @Override
-            public GroupViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+            public GroupViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
                 LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
-                return new GroupViewHolder(inflater.inflate(R.layout.item_group, viewGroup, false));
+                GroupViewHolder viewHolder = new GroupViewHolder(inflater.inflate(R.layout.item_group, viewGroup, false));
+
+                viewHolder.setOnClickListener(new GroupViewHolder.ClickListener() {
+                    @Override
+                    public void onItemClick(View view, int position) {
+                        System.out.println("onItemClick");
+                        Toast.makeText(getActivity(), String.valueOf(position), Toast.LENGTH_SHORT).show();
+                    }
+                });
+                return viewHolder;
             }
         };
 
@@ -222,5 +222,33 @@ public class GroupListFragment extends Fragment {
     public void onResume() {
         super.onResume();
         mFirebaseAdapter.startListening();
+    }
+
+    public static class GroupViewHolder extends RecyclerView.ViewHolder {
+
+        private GroupViewHolder.ClickListener mClickListenr;
+
+        TextView mGroupName;
+
+        public interface ClickListener {
+            public void onItemClick(View view, int position);
+        }
+
+        public GroupViewHolder(View itemView) {
+            super(itemView);
+
+            mGroupName = itemView.findViewById(R.id.groupNameView);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    mClickListenr.onItemClick(view, getAdapterPosition());
+                }
+            });
+        }
+
+        public void setOnClickListener(GroupViewHolder.ClickListener clickListener) {
+            mClickListenr = clickListener;
+        }
     }
 }
