@@ -13,11 +13,18 @@
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"/>
 
+    <EditText
+        android:id="@+id/groupname"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/addButton"
+        android:hint="@string/enter_group_name"/>
     <Button
         android:id="@+id/addButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
+        android:enabled="false"
         android:text="@string/add_new_group"/>
 
 </RelativeLayout>
