@@ -36,7 +36,8 @@ public class MakeNewGroupDialog extends DialogFragment {
         // TODO: add the group name to the dialog
         return new AlertDialog.Builder(getActivity())
                 .setTitle(R.string.make_new_group)
-                .setPositiveButton(R.string.make, listener)
+                .setMessage(R.string.make_group_message)
+                .setPositiveButton(R.string.ok, listener)
                 .setNegativeButton(R.string.cancel, listener)
                 .create();
     }
