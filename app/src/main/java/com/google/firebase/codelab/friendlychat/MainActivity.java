@@ -182,7 +182,8 @@ public class MainActivity extends AppCompatActivity implements
                 .setValue(new User(
                         mFirebaseUser.getUid(),
                         mFirebaseUser.getEmail(),
-                        mFirebaseUser.getDisplayName()
+                        mFirebaseUser.getDisplayName(),
+                        mFirebaseUser.getPhotoUrl().toString()
                 ));
 
 
