@@ -22,6 +22,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -105,6 +106,7 @@ public class MainActivity extends AppCompatActivity implements
 
     private static final String TAG = "MainActivity";
     public static final String MESSAGES_CHILD = "messages";
+    public static final String USER_CHILD = "User";
     private static final int REQUEST_INVITE = 1;
     private static final int REQUEST_IMAGE = 2;
     public static final int DEFAULT_MSG_LENGTH_LIMIT = 10;
@@ -136,6 +138,8 @@ public class MainActivity extends AppCompatActivity implements
     private ActionBarDrawerToggle mDrawerToggle;
     private CharSequence mDrawerTitle;
     private CharSequence mTitle;
+    private FragmentManager mFragmentManager;
+    // TODO: remove unused variable
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -172,6 +176,16 @@ public class MainActivity extends AppCompatActivity implements
         mLinearLayoutManager.setStackFromEnd(true);
 
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
+        mFirebaseDatabaseReference
+                .child(USER_CHILD)
+                .child(mFirebaseUser.getUid())
+                .setValue(new User(
+                        mFirebaseUser.getUid(),
+                        mFirebaseUser.getEmail(),
+                        mFirebaseUser.getDisplayName(),
+                        mFirebaseUser.getPhotoUrl().toString()
+                ));
+
 
         SnapshotParser<FriendlyMessage> parser = new SnapshotParser<FriendlyMessage>() {
             @Override
@@ -356,15 +370,17 @@ public class MainActivity extends AppCompatActivity implements
 
         mTitle = mDrawerTitle = getTitle();
         mDrawerLayout = findViewById(R.id.drawer_layout);
+
+        //TODO: add function that to close navigationDrawer when pushing the button
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
                 R.string.drawer_open, R.string.drawer_close) {
 
-            /** Called when a drawer has settled in a completely closed state. */
+            /* Called when a drawer has settled in a completely closed state. */
             public void onDrawerClosed(View view) {
                 super.onDrawerClosed(view);
             }
 
-            /** Called when a drawer has settled in a completely open state. */
+            /* Called when a drawer has settled in a completely open state. */
             public void onDrawerOpened(View drawerView) {
                 super.onDrawerOpened(drawerView);
             }
@@ -372,10 +388,38 @@ public class MainActivity extends AppCompatActivity implements
 
         // Set the drawer toggle as the DrawerListener
         mDrawerLayout.addDrawerListener(mDrawerToggle);
-
         ActionBar actionBar = getSupportActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeButtonEnabled(true);
+
+
+        mFragmentManager = getSupportFragmentManager();
+
+        // Generate click listener for navigation button.
+        //TODO: change ".add" to ".replace"
+        findViewById(R.id.navigation_button_friends).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                System.out.println("click");
+
+                Bundle bundle = new Bundle();
+                bundle.putString("uid", mFirebaseUser.getUid());
+
+                FriendListFragment fragment = new FriendListFragment();
+                fragment.setArguments(bundle);
+
+                mFragmentManager.beginTransaction()
+                        .add(R.id.fragment_container, fragment)
+                        .commit();
+            }
+        });
+        findViewById(R.id.navigation_button_groups).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
+
     }
 
     private Action getMessageViewAction(FriendlyMessage friendlyMessage) {
