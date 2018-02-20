@@ -22,7 +22,6 @@ import android.widget.Toast;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.firebase.ui.database.FirebaseRecyclerOptions;
-import com.firebase.ui.database.SnapshotParser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -110,16 +109,9 @@ public class GroupListFragment extends Fragment {
     }
 
     private void initializeFirebaseAdapter() {
-        SnapshotParser<Group> parser = new SnapshotParser<Group>() {
-            @Override
-            public Group parseSnapshot(DataSnapshot dataSnapshot) {
-                return dataSnapshot.getValue(Group.class);
-            }
-        };
-
         DatabaseReference groupRef = mDatabaseReference.child(GROUP_CHILD);
         FirebaseRecyclerOptions<Group> options = new FirebaseRecyclerOptions.Builder<Group>()
-                .setQuery(groupRef, parser)
+                .setQuery(groupRef, Group.class)
                 .build();
         mFirebaseAdapter = new FirebaseRecyclerAdapter<Group, GroupViewHolder>(options) {
             @Override
@@ -141,7 +133,6 @@ public class GroupListFragment extends Fragment {
                     @Override
                     public void onItemClick(View view, int position) {
                         Group group = mFirebaseAdapter.getItem(position);
-                        Toast.makeText(getActivity(), String.valueOf(position), Toast.LENGTH_SHORT).show();
                         if (mListener != null) {
                             mListener.onClickMakeGroupButton(group);
                             mFragmentManager.beginTransaction().remove(mFragment).commit();
