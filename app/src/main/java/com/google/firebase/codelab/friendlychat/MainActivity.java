@@ -45,7 +45,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -143,15 +142,11 @@ public class MainActivity extends AppCompatActivity implements
     private FirebaseRemoteConfig mFirebaseRemoteConfig;
     private GoogleApiClient mGoogleApiClient;
     private DrawerLayout mDrawerLayout;
-    private LinearLayout mDrawerLinearLayout;
     private ActionBarDrawerToggle mDrawerToggle;
-    private CharSequence mDrawerTitle;
-    private CharSequence mTitle;
     private String mGroupId;
     private FragmentManager mFragmentManager;
     private SnapshotParser<FriendlyMessage> mParser;
     private Bundle mBundle;
-    // TODO: remove unused variable
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
@@ -310,9 +305,7 @@ public class MainActivity extends AppCompatActivity implements
         });
 
         mDrawerLayout = findViewById(R.id.drawer_layout);
-        mDrawerLinearLayout = findViewById(R.id.navigation_drawer_layout);
 
-        mTitle = mDrawerTitle = getTitle();
         mDrawerLayout = findViewById(R.id.drawer_layout);
 
         //TODO: add function that to close navigationDrawer when pushing the button
