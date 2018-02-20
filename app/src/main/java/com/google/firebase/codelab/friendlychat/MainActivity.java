@@ -195,18 +195,6 @@ public class MainActivity extends AppCompatActivity implements
                         mFirebaseUser.getPhotoUrl().toString()
                 ));
 
-
-        mParser = new SnapshotParser<FriendlyMessage>() {
-            @Override
-            public FriendlyMessage parseSnapshot(DataSnapshot dataSnapshot) {
-                FriendlyMessage friendlyMessage = dataSnapshot.getValue(FriendlyMessage.class);
-                if (friendlyMessage != null) {
-                    friendlyMessage.setId(dataSnapshot.getKey());
-                }
-                return friendlyMessage;
-            }
-        };
-
         mBundle = new Bundle();
         initializeAdapter();
 
@@ -397,6 +385,17 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void initializeAdapter() {
+        mParser = new SnapshotParser<FriendlyMessage>() {
+            @Override
+            public FriendlyMessage parseSnapshot(DataSnapshot dataSnapshot) {
+                FriendlyMessage friendlyMessage = dataSnapshot.getValue(FriendlyMessage.class);
+                if (friendlyMessage != null) {
+                    friendlyMessage.setId(dataSnapshot.getKey());
+                }
+                return friendlyMessage;
+            }
+        };
+
         System.out.println(String.valueOf(mGroupId));
         DatabaseReference messagesRef = mFirebaseDatabaseReference.child(MESSAGES_CHILD).child(String.valueOf(mGroupId));
 
