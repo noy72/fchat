@@ -254,7 +254,7 @@ public class MainActivity extends AppCompatActivity implements
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                if (charSequence.toString().trim().length() > 0 && mGroupId != INITIAL_GROUP_ID) {
+                if (charSequence.toString().trim().length() > 0 && !mGroupId.equals(INITIAL_GROUP_ID)) {
                     mSendButton.setEnabled(true);
                 } else {
                     mSendButton.setEnabled(false);
