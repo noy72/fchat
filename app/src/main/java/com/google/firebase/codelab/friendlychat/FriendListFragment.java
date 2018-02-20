@@ -97,7 +97,6 @@ public class FriendListFragment extends Fragment {
             public void onClick(View view) {
                 final String mailAddress = mMailAddress.getText().toString() + "@gmail.com";
                 DatabaseReference ref = mFirebaseDatabase.getReference();
-                System.out.println(mailAddress);
 
                 ref.child(USER_CHILD).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -107,7 +106,6 @@ public class FriendListFragment extends Fragment {
                         // TODO: Do not register oneself.
                         for (DataSnapshot data: dataSnapshot.getChildren()){
                             User user = data.getValue(User.class);
-                            System.out.println(user.getMail());
                             if (mailAddress.equals(user.getMail())) {
                                 showRegistrationDialog(user);
                                 return;

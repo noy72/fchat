@@ -385,6 +385,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void initializeAdapter() {
+
         mParser = new SnapshotParser<FriendlyMessage>() {
             @Override
             public FriendlyMessage parseSnapshot(DataSnapshot dataSnapshot) {
@@ -396,7 +397,6 @@ public class MainActivity extends AppCompatActivity implements
             }
         };
 
-        System.out.println(String.valueOf(mGroupId));
         DatabaseReference messagesRef = mFirebaseDatabaseReference.child(MESSAGES_CHILD).child(String.valueOf(mGroupId));
 
         FirebaseRecyclerOptions<FriendlyMessage> options =
