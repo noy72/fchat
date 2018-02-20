@@ -29,6 +29,7 @@
     <string name="group_name">Groupname</string>
     <string name="dialog_invite_title">Invite friend</string>
     <string name="dialog_invite_message">Please select a group from GROUPS buton.</string>
+    <string name="invite_fragment_message">Please tap the friend you want to invite to the group.</string>
     <string name="domain">\@gmail.com</string>
 
     <!-- TODO: Remove or change this placeholder text -->
