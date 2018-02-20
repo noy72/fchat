@@ -205,11 +205,9 @@ public class FriendListFragment extends Fragment {
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        Bundle bundle = getArguments();
-                        String uid = bundle.getString("uid");
                         DatabaseReference newRef = mDatabaseReference
                                 .child(FRIENDS_CHILD)
-                                .child(uid)
+                                .child(mBundle.getString("uid"))
                                 .push();
                         newRef.setValue(user.getUid());
 
