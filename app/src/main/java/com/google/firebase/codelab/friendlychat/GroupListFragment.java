@@ -103,8 +103,13 @@ public class GroupListFragment extends Fragment {
             public void afterTextChanged(Editable editable) {
             }
         });
+        initializeFirebaseAdapter();
 
-        // New Child entries
+
+        return view;
+    }
+
+    private void initializeFirebaseAdapter() {
         SnapshotParser<Group> parser = new SnapshotParser<Group>() {
             @Override
             public Group parseSnapshot(DataSnapshot dataSnapshot) {
@@ -163,8 +168,6 @@ public class GroupListFragment extends Fragment {
 
         mRecyclerView.setLayoutManager(mLinearLayoutManager);
         mRecyclerView.setAdapter(mFirebaseAdapter);
-
-        return view;
     }
 
     @Override
