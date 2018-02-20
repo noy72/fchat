@@ -23,14 +23,13 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import static com.google.firebase.codelab.friendlychat.MainActivity.USER_CHILD;
+import static com.google.firebase.codelab.friendlychat.MainActivity.FRIENDS_CHILD;
 
 
 /**
  * A simple {@link Fragment} subclass.
  */
 public class FriendListFragment extends Fragment {
-    private final String FRIENDS_CHILD = "friends";
-
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mDatabaseReference;
     private RecyclerView mMessageRecyclerView;

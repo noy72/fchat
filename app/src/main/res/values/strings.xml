@@ -14,8 +14,9 @@
     <string name="fresh_config">Fresh Config</string>
     <string name="cause_crash">Cause Crash</string>
     <string name="banner_ad_unit_id" translatable="false">ca-app-pub-3940256099942544/6300978111</string>
-    <string name="navigation_menu_button_friends">Friends</string>
-    <string name="navigation_menu_button_groups">Groups</string>
+    <string name="navigation_menu_button_friends">friends</string>
+    <string name="navigation_menu_button_groups">groups</string>
+    <string name="navigation_menu_button_invite">invite</string>
     <string name="drawer_open">open drawer</string>
     <string name="drawer_close">close drawer</string>
     <string name="search_friend">Search by friend\'s email address.</string>
@@ -25,6 +26,8 @@
     <string name="make_group_message">Do you make a new group?</string>
     <string name="enter_group_name">Please enter a group name.</string>
     <string name="group_name">Groupname</string>
+    <string name="dialog_invite_title">Invite friend</string>
+    <string name="dialog_invite_message">Please select a group from GROUPS buton.</string>
     <string name="domain">\@gmail.com</string>
 
     <!-- TODO: Remove or change this placeholder text -->

@@ -5,23 +5,21 @@ package com.google.firebase.codelab.friendlychat;
  */
 
 public class Group {
-    long id;
+    String id;
     String name;
-    String joinUser;
 
     public Group(){};
 
-    public Group(long id, String name, String joinUser) {
+    public Group(String id, String name) {
         this.id = id;
         this.name = name;
-        this.joinUser = joinUser;
     }
 
-    public long getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(long id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -31,13 +29,5 @@ public class Group {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getJoinUser() {
-        return joinUser;
-    }
-
-    public void setJoinUser(String joinUser) {
-        this.joinUser = joinUser;
     }
 }

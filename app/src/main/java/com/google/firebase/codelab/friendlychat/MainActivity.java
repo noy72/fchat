@@ -15,6 +15,7 @@
  */
 package com.google.firebase.codelab.friendlychat;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -27,6 +28,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -109,6 +111,10 @@ public class MainActivity extends AppCompatActivity implements
     private static final String TAG = "MainActivity";
     public static final String MESSAGES_CHILD = "messages";
     public static final String USER_CHILD = "User";
+    public static final String FRIENDS_CHILD = "friends";
+    public static final String GROUP_CHILD = "groups";
+    public static final String JOIN_CHILD = "join";
+    public static final String BUNDLE_UID_KEY = "uid";
     private static final int REQUEST_INVITE = 1;
     private static final int REQUEST_IMAGE = 2;
     public static final int DEFAULT_MSG_LENGTH_LIMIT = 10;
@@ -116,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements
     private static final String MESSAGE_SENT_EVENT = "message_sent";
     private static final String MESSAGE_URL = "http://friendlychat.firebase.google.com/message/";
     private static final String LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif";
-    private static final long INITIAL_GROUP_ID = -1;
+    private static final String INITIAL_GROUP_ID = "initial_group";
 
     private String mUsername;
     private String mPhotoUrl;
@@ -141,9 +147,10 @@ public class MainActivity extends AppCompatActivity implements
     private ActionBarDrawerToggle mDrawerToggle;
     private CharSequence mDrawerTitle;
     private CharSequence mTitle;
-    private long mGroupId;
+    private String mGroupId;
     private FragmentManager mFragmentManager;
     private SnapshotParser<FriendlyMessage> mParser;
+    private Bundle mBundle;
     // TODO: remove unused variable
 
     @Override
@@ -205,6 +212,7 @@ public class MainActivity extends AppCompatActivity implements
             }
         };
 
+        mBundle = new Bundle();
         initializeAdapter();
 
         mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
@@ -330,19 +338,20 @@ public class MainActivity extends AppCompatActivity implements
 
 
         mFragmentManager = getSupportFragmentManager();
+        initializeNavigationButtons();
 
-        // Generate click listener for navigation button.
+    }
+
+    // Generate click listener for navigation button.
+    private void initializeNavigationButtons() {
+        mBundle.putString(BUNDLE_UID_KEY, mFirebaseUser.getUid());
+        mBundle.putString("group_id", mGroupId);
+
         findViewById(R.id.navigation_button_friends).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                System.out.println("click");
-
-                Bundle bundle = new Bundle();
-                bundle.putString("uid", mFirebaseUser.getUid());
-
                 FriendListFragment fragment = new FriendListFragment();
-                fragment.setArguments(bundle);
-
+                fragment.setArguments(mBundle);
                 mFragmentManager.beginTransaction()
                         .replace(R.id.fragment_container, fragment)
                         .commit();
@@ -352,18 +361,46 @@ public class MainActivity extends AppCompatActivity implements
         findViewById(R.id.navigation_button_groups).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Bundle bundle = new Bundle();
-                bundle.putString("uid", mFirebaseUser.getUid());
-
                 GroupListFragment fragment = new GroupListFragment();
-                fragment.setArguments(bundle);
-
+                fragment.setArguments(mBundle);
                 mFragmentManager.beginTransaction()
                         .replace(R.id.fragment_container, fragment)
                         .commit();
             }
         });
 
+        initializeInviteButtonListener();
+    }
+
+    private void initializeInviteButtonListener() {
+        findViewById(R.id.navigation_button_invite).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (mGroupId.equals(INITIAL_GROUP_ID)) {
+                    showInviteDialog();
+                } else {
+                    InviteFriendFragment fragment = new InviteFriendFragment();
+                    fragment.setArguments(mBundle);
+                    mFragmentManager.beginTransaction()
+                            .replace(R.id.fragment_container, fragment)
+                            .commit();
+                }
+            }
+        });
+    }
+
+    private void showInviteDialog() {
+        // reject invite when mGroupId is INITIAL_GROUP_ID
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.dialog_invite_title)
+                .setMessage(R.string.dialog_invite_message)
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        // do nothing
+                    }
+                });
+        builder.create().show();
     }
 
     private void initializeAdapter() {
@@ -523,6 +560,8 @@ public class MainActivity extends AppCompatActivity implements
         mFirebaseAdapter.stopListening();
 
         mGroupId = group.getId();
+        mBundle.putString("group_id", group.getId());
+        initializeInviteButtonListener();
         initializeAdapter();
 
         mFirebaseAdapter.startListening();
