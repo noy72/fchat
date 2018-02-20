@@ -40,7 +40,6 @@ public class GroupListFragment extends Fragment {
     private final int REQUEST_CODE = 100;
     private final String TAG = "GroupListFragment";
 
-    private View mView; // for findViewById
     private RecyclerView mRecyclerView;
     private FirebaseRecyclerAdapter<Group, GroupViewHolder> mFirebaseAdapter;
     private LinearLayoutManager mLinearLayoutManager;
@@ -48,11 +47,10 @@ public class GroupListFragment extends Fragment {
     private Button mAddGroupButton;
     private FragmentManager mFragmentManager;
     private EditText mNewGroupName;
-    private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mDatabaseReference;
-    private String mUid;
     private GroupListListener mListener;
     private Fragment mFragment;
+    private Bundle mBundle;
 
     public GroupListFragment() {
         // Required empty public constructor
@@ -66,24 +64,17 @@ public class GroupListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        mView = inflater.inflate(R.layout.fragment_group_list, container, false);
-        return mView;
-    }
+        View view = inflater.inflate(R.layout.fragment_group_list, container, false);
 
-    @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-        mAddGroupButton = mView.findViewById(R.id.addButton);
-        mRecyclerView = mView.findViewById(R.id.groupRecyclerView);
-        mNewGroupName = mView.findViewById(R.id.groupname);
-        mFirebaseDatabase = FirebaseDatabase.getInstance();
-        mDatabaseReference = mFirebaseDatabase.getReference();
+        mAddGroupButton = view.findViewById(R.id.addButton);
+        mRecyclerView = view.findViewById(R.id.groupRecyclerView);
+        mNewGroupName = view.findViewById(R.id.groupname);
+        mDatabaseReference = FirebaseDatabase.getInstance().getReference();
         mLinearLayoutManager = new LinearLayoutManager(getContext());
-        mProgressBar = mView.findViewById(R.id.progressBar);
+        mProgressBar = view.findViewById(R.id.progressBar);
         mFragmentManager = getFragmentManager();
         mFragment = this;
-        setUid();
+        mBundle = getArguments();
 
         mAddGroupButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -172,11 +163,8 @@ public class GroupListFragment extends Fragment {
 
         mRecyclerView.setLayoutManager(mLinearLayoutManager);
         mRecyclerView.setAdapter(mFirebaseAdapter);
-    }
 
-    private void setUid() {
-        Bundle bundle = getArguments();
-        mUid = bundle.getString("uid");
+        return view;
     }
 
     @Override
@@ -202,10 +190,13 @@ public class GroupListFragment extends Fragment {
                         .child(GROUP_CHILD)
                         .push();
                 ref.setValue(new Group(ref.getKey(), groupName));
-                ref.child("user").push().setValue(mUid);
+                ref.child("user").push().setValue(mBundle.getString("uid"));
 
                 // add group to user's group list
-                mDatabaseReference.child(JOIN_CHILD).child(mUid).push().setValue(ref.getKey());
+                mDatabaseReference
+                        .child(JOIN_CHILD)
+                        .child(mBundle.getString("uid"))
+                        .push().setValue(ref.getKey());
             }
 
             @Override
@@ -251,12 +242,11 @@ public class GroupListFragment extends Fragment {
             public void onItemClick(View view, int position);
         }
 
-        public GroupViewHolder(View itemView) {
-            super(itemView);
+        public GroupViewHolder(View iteview) {
+            super(iteview);
 
-            mGroupName = itemView.findViewById(R.id.groupNameView);
-
-            itemView.setOnClickListener(new View.OnClickListener() {
+            mGroupName = iteview.findViewById(R.id.groupNameView);
+            iteview.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     mClickListenr.onItemClick(view, getAdapterPosition());
