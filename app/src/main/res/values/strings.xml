@@ -20,6 +20,11 @@
     <string name="drawer_close">close drawer</string>
     <string name="search_friend">Search by friend\'s email address.</string>
     <string name="friend_registration_dialog">Register to FriendList</string>
+    <string name="add_new_group">add new group</string>
+    <string name="make_new_group">Make a new group</string>
+    <string name="make_group_message">Do you make a new group?</string>
+    <string name="enter_group_name">Please enter a group name.</string>
+    <string name="group_name">Groupname</string>
     <string name="domain">\@gmail.com</string>
 
     <!-- TODO: Remove or change this placeholder text -->

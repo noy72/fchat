@@ -87,7 +87,9 @@ import java.util.Map;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 public class MainActivity extends AppCompatActivity implements
-        GoogleApiClient.OnConnectionFailedListener {
+        GoogleApiClient.OnConnectionFailedListener,
+        GroupListFragment.GroupListListener {
+
 
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
         TextView messageTextView;
@@ -114,6 +116,7 @@ public class MainActivity extends AppCompatActivity implements
     private static final String MESSAGE_SENT_EVENT = "message_sent";
     private static final String MESSAGE_URL = "http://friendlychat.firebase.google.com/message/";
     private static final String LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif";
+    private static final long INITIAL_GROUP_ID = -1;
 
     private String mUsername;
     private String mPhotoUrl;
@@ -138,13 +141,17 @@ public class MainActivity extends AppCompatActivity implements
     private ActionBarDrawerToggle mDrawerToggle;
     private CharSequence mDrawerTitle;
     private CharSequence mTitle;
+    private long mGroupId;
     private FragmentManager mFragmentManager;
+    private SnapshotParser<FriendlyMessage> mParser;
     // TODO: remove unused variable
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mGroupId = INITIAL_GROUP_ID;
 
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mUsername = ANONYMOUS;
@@ -187,7 +194,7 @@ public class MainActivity extends AppCompatActivity implements
                 ));
 
 
-        SnapshotParser<FriendlyMessage> parser = new SnapshotParser<FriendlyMessage>() {
+        mParser = new SnapshotParser<FriendlyMessage>() {
             @Override
             public FriendlyMessage parseSnapshot(DataSnapshot dataSnapshot) {
                 FriendlyMessage friendlyMessage = dataSnapshot.getValue(FriendlyMessage.class);
@@ -198,11 +205,174 @@ public class MainActivity extends AppCompatActivity implements
             }
         };
 
-        DatabaseReference messagesRef = mFirebaseDatabaseReference.child(MESSAGES_CHILD);
+        initializeAdapter();
+
+        mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                super.onItemRangeInserted(positionStart, itemCount);
+                int friendlyMessageCount = mFirebaseAdapter.getItemCount();
+                int lastVisiblePosition = mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
+                // If the recycler view is initially being loaded or the user is at the bottom of the list, scroll
+                // to the bottom of the list to show the newly added message.
+                if (lastVisiblePosition == -1 ||
+                        (positionStart >= (friendlyMessageCount - 1) && lastVisiblePosition == (positionStart - 1))) {
+                    mMessageRecyclerView.scrollToPosition(positionStart);
+                }
+            }
+        });
+
+        mMessageRecyclerView.setLayoutManager(mLinearLayoutManager);
+
+        // Initialize and request AdMob ad.
+        mAdView = (AdView) findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
+
+        // Initialize Firebase Measurement.
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+
+        // Initialize Firebase Remote Config.
+        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
+
+        // Define Firebase Remote Config Settings.
+        FirebaseRemoteConfigSettings firebaseRemoteConfigSettings =
+                new FirebaseRemoteConfigSettings.Builder()
+                .setDeveloperModeEnabled(true)
+                .build();
+
+        // Define default config values. Defaults are used when fetched config values are not
+        // available. Eg: if an error occurred fetching values from the server.
+        Map<String, Object> defaultConfigMap = new HashMap<>();
+        defaultConfigMap.put("friendly_msg_length", 10L);
+
+        // Apply config settings and default values.
+        mFirebaseRemoteConfig.setConfigSettings(firebaseRemoteConfigSettings);
+        mFirebaseRemoteConfig.setDefaults(defaultConfigMap);
+
+        // Fetch remote config.
+        fetchConfig();
+
+        mMessageEditText = (EditText) findViewById(R.id.messageEditText);
+        mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(mSharedPreferences
+                .getInt(CodelabPreferences.FRIENDLY_MSG_LENGTH, DEFAULT_MSG_LENGTH_LIMIT))});
+        mMessageEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                if (charSequence.toString().trim().length() > 0 && mGroupId != INITIAL_GROUP_ID) {
+                    mSendButton.setEnabled(true);
+                } else {
+                    mSendButton.setEnabled(false);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+            }
+        });
+
+        mAddMessageImageView = (ImageView) findViewById(R.id.addMessageImageView);
+        mAddMessageImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("image/*");
+                startActivityForResult(intent, REQUEST_IMAGE);
+            }
+        });
+
+        mSendButton = (Button) findViewById(R.id.sendButton);
+        mSendButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                FriendlyMessage friendlyMessage = new FriendlyMessage(mMessageEditText.getText().toString(), mUsername,
+                        mPhotoUrl, null);
+                mFirebaseDatabaseReference
+                        .child(MESSAGES_CHILD)
+                        .child(String.valueOf(mGroupId))
+                        .push().setValue(friendlyMessage);
+                mMessageEditText.setText("");
+                mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);
+            }
+        });
+
+        mDrawerLayout = findViewById(R.id.drawer_layout);
+        mDrawerLinearLayout = findViewById(R.id.navigation_drawer_layout);
+
+        mTitle = mDrawerTitle = getTitle();
+        mDrawerLayout = findViewById(R.id.drawer_layout);
+
+        //TODO: add function that to close navigationDrawer when pushing the button
+        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
+                R.string.drawer_open, R.string.drawer_close) {
+
+            /* Called when a drawer has settled in a completely closed state. */
+            public void onDrawerClosed(View view) {
+                super.onDrawerClosed(view);
+            }
+
+            /* Called when a drawer has settled in a completely open state. */
+            public void onDrawerOpened(View drawerView) {
+                super.onDrawerOpened(drawerView);
+            }
+        };
+
+        // Set the drawer toggle as the DrawerListener
+        mDrawerLayout.addDrawerListener(mDrawerToggle);
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setHomeButtonEnabled(true);
+
+
+        mFragmentManager = getSupportFragmentManager();
+
+        // Generate click listener for navigation button.
+        findViewById(R.id.navigation_button_friends).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                System.out.println("click");
+
+                Bundle bundle = new Bundle();
+                bundle.putString("uid", mFirebaseUser.getUid());
+
+                FriendListFragment fragment = new FriendListFragment();
+                fragment.setArguments(bundle);
+
+                mFragmentManager.beginTransaction()
+                        .replace(R.id.fragment_container, fragment)
+                        .commit();
+
+            }
+        });
+        findViewById(R.id.navigation_button_groups).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Bundle bundle = new Bundle();
+                bundle.putString("uid", mFirebaseUser.getUid());
+
+                GroupListFragment fragment = new GroupListFragment();
+                fragment.setArguments(bundle);
+
+                mFragmentManager.beginTransaction()
+                        .replace(R.id.fragment_container, fragment)
+                        .commit();
+            }
+        });
+
+    }
+
+    private void initializeAdapter() {
+        System.out.println(String.valueOf(mGroupId));
+        DatabaseReference messagesRef = mFirebaseDatabaseReference.child(MESSAGES_CHILD).child(String.valueOf(mGroupId));
 
         FirebaseRecyclerOptions<FriendlyMessage> options =
                 new FirebaseRecyclerOptions.Builder<FriendlyMessage>()
-                        .setQuery(messagesRef, parser)
+                        .setQuery(messagesRef, mParser)
                         .build();
 
         mFirebaseAdapter = new FirebaseRecyclerAdapter<FriendlyMessage, MessageViewHolder>(options) {
@@ -272,154 +442,7 @@ public class MainActivity extends AppCompatActivity implements
                 FirebaseUserActions.getInstance().end(getMessageViewAction(friendlyMessage));
             }
         };
-
-        mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
-            @Override
-            public void onItemRangeInserted(int positionStart, int itemCount) {
-                super.onItemRangeInserted(positionStart, itemCount);
-                int friendlyMessageCount = mFirebaseAdapter.getItemCount();
-                int lastVisiblePosition = mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
-                // If the recycler view is initially being loaded or the user is at the bottom of the list, scroll
-                // to the bottom of the list to show the newly added message.
-                if (lastVisiblePosition == -1 ||
-                        (positionStart >= (friendlyMessageCount - 1) && lastVisiblePosition == (positionStart - 1))) {
-                    mMessageRecyclerView.scrollToPosition(positionStart);
-                }
-            }
-        });
-
-        mMessageRecyclerView.setLayoutManager(mLinearLayoutManager);
         mMessageRecyclerView.setAdapter(mFirebaseAdapter);
-
-        // Initialize and request AdMob ad.
-        mAdView = (AdView) findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder().build();
-        mAdView.loadAd(adRequest);
-
-        // Initialize Firebase Measurement.
-        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
-
-        // Initialize Firebase Remote Config.
-        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
-
-        // Define Firebase Remote Config Settings.
-        FirebaseRemoteConfigSettings firebaseRemoteConfigSettings =
-                new FirebaseRemoteConfigSettings.Builder()
-                .setDeveloperModeEnabled(true)
-                .build();
-
-        // Define default config values. Defaults are used when fetched config values are not
-        // available. Eg: if an error occurred fetching values from the server.
-        Map<String, Object> defaultConfigMap = new HashMap<>();
-        defaultConfigMap.put("friendly_msg_length", 10L);
-
-        // Apply config settings and default values.
-        mFirebaseRemoteConfig.setConfigSettings(firebaseRemoteConfigSettings);
-        mFirebaseRemoteConfig.setDefaults(defaultConfigMap);
-
-        // Fetch remote config.
-        fetchConfig();
-
-        mMessageEditText = (EditText) findViewById(R.id.messageEditText);
-        mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(mSharedPreferences
-                .getInt(CodelabPreferences.FRIENDLY_MSG_LENGTH, DEFAULT_MSG_LENGTH_LIMIT))});
-        mMessageEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                if (charSequence.toString().trim().length() > 0) {
-                    mSendButton.setEnabled(true);
-                } else {
-                    mSendButton.setEnabled(false);
-                }
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-            }
-        });
-
-        mAddMessageImageView = (ImageView) findViewById(R.id.addMessageImageView);
-        mAddMessageImageView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                intent.setType("image/*");
-                startActivityForResult(intent, REQUEST_IMAGE);
-            }
-        });
-
-        mSendButton = (Button) findViewById(R.id.sendButton);
-        mSendButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                FriendlyMessage friendlyMessage = new FriendlyMessage(mMessageEditText.getText().toString(), mUsername,
-                        mPhotoUrl, null);
-                mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(friendlyMessage);
-                mMessageEditText.setText("");
-                mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);
-            }
-        });
-
-        mDrawerLayout = findViewById(R.id.drawer_layout);
-        mDrawerLinearLayout = findViewById(R.id.navigation_drawer_layout);
-
-        mTitle = mDrawerTitle = getTitle();
-        mDrawerLayout = findViewById(R.id.drawer_layout);
-
-        //TODO: add function that to close navigationDrawer when pushing the button
-        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
-                R.string.drawer_open, R.string.drawer_close) {
-
-            /* Called when a drawer has settled in a completely closed state. */
-            public void onDrawerClosed(View view) {
-                super.onDrawerClosed(view);
-            }
-
-            /* Called when a drawer has settled in a completely open state. */
-            public void onDrawerOpened(View drawerView) {
-                super.onDrawerOpened(drawerView);
-            }
-        };
-
-        // Set the drawer toggle as the DrawerListener
-        mDrawerLayout.addDrawerListener(mDrawerToggle);
-        ActionBar actionBar = getSupportActionBar();
-        actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setHomeButtonEnabled(true);
-
-
-        mFragmentManager = getSupportFragmentManager();
-
-        // Generate click listener for navigation button.
-        //TODO: change ".add" to ".replace"
-        findViewById(R.id.navigation_button_friends).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                System.out.println("click");
-
-                Bundle bundle = new Bundle();
-                bundle.putString("uid", mFirebaseUser.getUid());
-
-                FriendListFragment fragment = new FriendListFragment();
-                fragment.setArguments(bundle);
-
-                mFragmentManager.beginTransaction()
-                        .add(R.id.fragment_container, fragment)
-                        .commit();
-            }
-        });
-        findViewById(R.id.navigation_button_groups).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-            }
-        });
-
     }
 
     private Action getMessageViewAction(FriendlyMessage friendlyMessage) {
@@ -493,6 +516,16 @@ public class MainActivity extends AppCompatActivity implements
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main_menu, menu);
         return true;
+    }
+
+    @Override
+    public void onClickMakeGroupButton(Group group) {
+        mFirebaseAdapter.stopListening();
+
+        mGroupId = group.getId();
+        initializeAdapter();
+
+        mFirebaseAdapter.startListening();
     }
 
     @Override
