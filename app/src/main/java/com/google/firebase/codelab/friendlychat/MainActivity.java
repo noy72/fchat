@@ -344,6 +344,7 @@ public class MainActivity extends AppCompatActivity implements
                     fragmentTransaction.remove(fragment);
                 }
                 fragmentTransaction.commit();
+                mDrawerLayout.closeDrawers();
             }
         });
 
@@ -355,7 +356,7 @@ public class MainActivity extends AppCompatActivity implements
                 mFragmentManager.beginTransaction()
                         .replace(R.id.fragment_container, fragment)
                         .commit();
-
+                mDrawerLayout.closeDrawers();
             }
         });
         findViewById(R.id.navigation_button_groups).setOnClickListener(new View.OnClickListener() {
@@ -366,9 +367,9 @@ public class MainActivity extends AppCompatActivity implements
                 mFragmentManager.beginTransaction()
                         .replace(R.id.fragment_container, fragment)
                         .commit();
+                mDrawerLayout.closeDrawers();
             }
         });
-
         initializeInviteButtonListener();
     }
 
@@ -385,6 +386,7 @@ public class MainActivity extends AppCompatActivity implements
                             .replace(R.id.fragment_container, fragment)
                             .commit();
                 }
+                mDrawerLayout.closeDrawers();
             }
         });
     }
