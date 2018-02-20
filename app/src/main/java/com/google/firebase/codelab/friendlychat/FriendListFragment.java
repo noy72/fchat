@@ -30,6 +30,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
+import java.util.HashSet;
 
 import static com.google.firebase.codelab.friendlychat.MainActivity.FRIENDS_CHILD;
 import static com.google.firebase.codelab.friendlychat.MainActivity.USER_CHILD;
@@ -51,6 +52,7 @@ public class FriendListFragment extends Fragment {
     private Bundle mBundle;
     private HashMap<String, User> mUidUserIndex;
     private HashMap<String, User> mAddressUserIndex;
+    private HashSet<String> mFriendsUid;
 
     public FriendListFragment() {
         // Required empty public constructor
@@ -64,6 +66,7 @@ public class FriendListFragment extends Fragment {
 
         mUidUserIndex = new HashMap<>();
         mAddressUserIndex = new HashMap<>();
+        mFriendsUid = new HashSet<>();
         mProgressBar = view.findViewById(R.id.progressBar);
         mLinearLayoutManager = new LinearLayoutManager(getContext());
         mContext = getContext();
@@ -97,8 +100,6 @@ public class FriendListFragment extends Fragment {
         mSearchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                // TODO: Detect when the user has already registered in the friend list
-
                 String mailAddress = mMailAddress.getText().toString() + "@gmail.com";
                 User user = mAddressUserIndex.get(mailAddress);
                 if (user == null) {
@@ -113,13 +114,13 @@ public class FriendListFragment extends Fragment {
             }
         });
 
-        initializeHashMap();
+        initializeHash();
         initializeFirebaseAdapter(view);
 
         return view;
     }
 
-    public void initializeHashMap() {
+    public void initializeHash() {
         DatabaseReference friendRef = mDatabaseReference.child(USER_CHILD);
         friendRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -128,6 +129,7 @@ public class FriendListFragment extends Fragment {
                     User user = data.getValue(User.class);
                     mUidUserIndex.put(data.getKey(), user);
                     mAddressUserIndex.put(user.getMail(), user);
+                    mFriendsUid.add(user.getUid());
                 }
             }
 
@@ -205,14 +207,18 @@ public class FriendListFragment extends Fragment {
                 .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        DatabaseReference newRef = mDatabaseReference
-                                .child(FRIENDS_CHILD)
-                                .child(mBundle.getString("uid"))
-                                .push();
-                        newRef.setValue(user.getUid());
+                        if (mFriendsUid.contains(user.getUid())) {
+                            Toast.makeText(getContext(), "Already registered", Toast.LENGTH_SHORT).show();
+                        } else {
+                            DatabaseReference newRef = mDatabaseReference
+                                    .child(FRIENDS_CHILD)
+                                    .child(mBundle.getString("uid"))
+                                    .push();
+                            newRef.setValue(user.getUid());
 
-                        mMailAddress.getEditableText().clear();
-                        Toast.makeText(getContext(), "add " + user.getName(), Toast.LENGTH_SHORT).show();
+                            mMailAddress.getEditableText().clear();
+                            Toast.makeText(getContext(), "add " + user.getName(), Toast.LENGTH_SHORT).show();
+                        }
                     }
                 })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
