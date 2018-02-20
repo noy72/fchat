@@ -1,6 +1,7 @@
 package com.google.firebase.codelab.friendlychat;
 
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
@@ -50,11 +51,16 @@ public class GroupListFragment extends Fragment {
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mDatabaseReference;
     private String mUid;
+    private GroupListListener mListener;
+    private Fragment mFragment;
 
     public GroupListFragment() {
         // Required empty public constructor
     }
 
+    public interface GroupListListener {
+        public void onClickMakeGroupButton(Group Group);
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -75,6 +81,8 @@ public class GroupListFragment extends Fragment {
         mDatabaseReference = mFirebaseDatabase.getReference();
         mLinearLayoutManager = new LinearLayoutManager(getContext());
         mProgressBar = mView.findViewById(R.id.progressBar);
+        mFragmentManager = getFragmentManager();
+        mFragment = this;
         setUid();
 
         mAddGroupButton.setOnClickListener(new View.OnClickListener() {
@@ -141,8 +149,12 @@ public class GroupListFragment extends Fragment {
                 viewHolder.setOnClickListener(new GroupViewHolder.ClickListener() {
                     @Override
                     public void onItemClick(View view, int position) {
-                        System.out.println("onItemClick");
+                        Group group = mFirebaseAdapter.getItem(position);
                         Toast.makeText(getActivity(), String.valueOf(position), Toast.LENGTH_SHORT).show();
+                        if (mListener != null) {
+                            mListener.onClickMakeGroupButton(group);
+                            mFragmentManager.beginTransaction().remove(mFragment).commit();
+                        }
                     }
                 });
                 return viewHolder;
@@ -213,6 +225,14 @@ public class GroupListFragment extends Fragment {
     }
 
     @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof GroupListListener) {
+            mListener = (GroupListListener) context;
+        }
+    }
+
+    @Override
     public void onPause() {
         mFirebaseAdapter.stopListening();
         super.onPause();
@@ -222,6 +242,12 @@ public class GroupListFragment extends Fragment {
     public void onResume() {
         super.onResume();
         mFirebaseAdapter.startListening();
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        mListener = null;
     }
 
     public static class GroupViewHolder extends RecyclerView.ViewHolder {
