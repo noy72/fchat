@@ -1,10 +1,13 @@
 package com.google.firebase.codelab.friendlychat;
 
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.InputFilter;
@@ -14,16 +17,22 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
+import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
-import static com.google.firebase.codelab.friendlychat.MainActivity.USER_CHILD;
+import java.util.HashMap;
+
 import static com.google.firebase.codelab.friendlychat.MainActivity.FRIENDS_CHILD;
+import static com.google.firebase.codelab.friendlychat.MainActivity.USER_CHILD;
 
 
 /**
@@ -32,10 +41,16 @@ import static com.google.firebase.codelab.friendlychat.MainActivity.FRIENDS_CHIL
 public class FriendListFragment extends Fragment {
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mDatabaseReference;
-    private RecyclerView mMessageRecyclerView;
+    private RecyclerView mRecyclerView;
+    private LinearLayoutManager mLinearLayoutManager;
+    private FirebaseRecyclerAdapter<String, FriendViewHolder> mFirebaseAdapter;
+    private ProgressBar mProgressBar;
+    private Context mContext;
     private Button mSearchButton;
     private EditText mMailAddress;
     private View mView; // view for findViewById
+    private Bundle mBundle;
+    private HashMap<String, User> mUserIndex;
 
     public FriendListFragment() {
         // Required empty public constructor
@@ -54,6 +69,11 @@ public class FriendListFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         Toast.makeText(getContext(), "test", Toast.LENGTH_SHORT).show();
 
+        mUserIndex = new HashMap<>();
+        mProgressBar = mView.findViewById(R.id.progressBar);
+        mLinearLayoutManager = new LinearLayoutManager(getContext());
+        mContext = getContext();
+        mBundle = getArguments();
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         mDatabaseReference = mFirebaseDatabase.getReference();
 
@@ -111,6 +131,77 @@ public class FriendListFragment extends Fragment {
                 });
             }
         });
+
+        initializeHashMap();
+        initializeFirebaseAdapter();
+    }
+
+    public void initializeHashMap() {
+        DatabaseReference friendRef = mDatabaseReference.child(USER_CHILD);
+        friendRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot data : dataSnapshot.getChildren()) {
+                    User user = data.getValue(User.class);
+                    String key = data.getKey();
+                    mUserIndex.put(key, user);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                throw new RuntimeException("Failed to read: " + databaseError.getCode());
+            }
+        });
+    }
+
+    public void initializeFirebaseAdapter() {
+        DatabaseReference friendRef = mDatabaseReference.child(FRIENDS_CHILD).child(mBundle.getString("uid"));
+        FirebaseRecyclerOptions<String> options = new FirebaseRecyclerOptions.Builder<String>()
+                .setQuery(friendRef, String.class).build();
+
+        mFirebaseAdapter = new FirebaseRecyclerAdapter<String, FriendViewHolder>(options) {
+            @Override
+            protected void onBindViewHolder(FriendViewHolder viewHodler, int position, String uid) {
+                mProgressBar.setVisibility(ProgressBar.INVISIBLE);
+                User user = mUserIndex.get(uid);
+                if (user.getName() != null) {
+                    viewHodler.mFriendName.setText(user.getName());
+                }
+
+                if (user.getPhotoUrl() == null) {
+                    viewHodler.mImageView
+                            .setImageDrawable(ContextCompat.getDrawable(mContext, R.drawable.ic_account_circle_black_36dp));
+                } else {
+                    Glide.with(mContext)
+                            .load(user.getPhotoUrl())
+                            .into(viewHodler.mImageView);
+                }
+            }
+
+            @Override
+            public FriendViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
+                LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
+                return new FriendViewHolder(inflater.inflate(R.layout.item_friend, viewGroup, false));
+            }
+        };
+        mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                super.onItemRangeInserted(positionStart, itemCount);
+                int groupCount = mFirebaseAdapter.getItemCount();
+                int lastVisiblePosition = mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
+
+                boolean extract = positionStart >= groupCount - 1 && lastVisiblePosition == positionStart - 1;
+                if (lastVisiblePosition == -1 || extract) {
+                    mRecyclerView.scrollToPosition(positionStart);
+                }
+            }
+        });
+
+        mRecyclerView = mView.findViewById(R.id.friendRecyclerView);
+        mRecyclerView.setLayoutManager(mLinearLayoutManager);
+        mRecyclerView.setAdapter(mFirebaseAdapter);
     }
 
 
@@ -142,4 +233,15 @@ public class FriendListFragment extends Fragment {
         builder.create().show();
     }
 
+    @Override
+    public void onPause() {
+        mFirebaseAdapter.stopListening();
+        super.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        mFirebaseAdapter.startListening();
+    }
 }
