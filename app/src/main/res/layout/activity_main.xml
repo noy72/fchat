@@ -30,19 +30,26 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
+            <TextView
+                android:id="@+id/currentGroupName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="30sp"
+                android:textColor="@color/colorAccent"
+                android:layout_alignParentTop="true"/>
+
             <android.support.v7.widget.RecyclerView
                 android:id="@+id/messageRecyclerView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_above="@+id/linearLayout"
-                android:layout_alignParentTop="true" />
+                android:layout_below="@+id/currentGroupName"
+                android:layout_above="@+id/linearLayout"/>
 
             <LinearLayout
                 android:id="@+id/linearLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_alignParentBottom="true"
-                android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
                 android:orientation="horizontal">
 

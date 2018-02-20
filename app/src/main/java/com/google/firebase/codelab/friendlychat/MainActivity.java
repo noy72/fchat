@@ -122,6 +122,7 @@ public class MainActivity extends AppCompatActivity implements
     private static final String MESSAGE_URL = "http://friendlychat.firebase.google.com/message/";
     private static final String LOADING_IMAGE_URL = "https://www.google.com/images/spin-32.gif";
     private static final String INITIAL_GROUP_ID = "initial_group";
+    private static final String INITIAL_GROUP_NAME = "Friendly Chat";
 
     private String mUsername;
     private String mPhotoUrl;
@@ -136,6 +137,7 @@ public class MainActivity extends AppCompatActivity implements
     private FirebaseAuth mFirebaseAuth;
     private FirebaseUser mFirebaseUser;
     private FirebaseAnalytics mFirebaseAnalytics;
+    private TextView mCurrentGroupName;
     private EditText mMessageEditText;
     private ImageView mAddMessageImageView;
     private AdView mAdView;
@@ -321,6 +323,8 @@ public class MainActivity extends AppCompatActivity implements
         mFragmentManager = getSupportFragmentManager();
         initializeNavigationButtons();
 
+        mCurrentGroupName = findViewById(R.id.currentGroupName);
+        mCurrentGroupName.setText(INITIAL_GROUP_NAME);
     }
 
     // Generate click listener for navigation button.
@@ -423,6 +427,7 @@ public class MainActivity extends AppCompatActivity implements
                     viewHolder.messageTextView.setVisibility(TextView.VISIBLE);
                     viewHolder.messageImageView.setVisibility(ImageView.GONE);
                 } else {
+                    // TODO: check photoUrl of INITIAL_GROUP_ID
                     String imageUrl = friendlyMessage.getImageUrl();
                     if (imageUrl.startsWith("gs://")) {
                         StorageReference storageReference = FirebaseStorage.getInstance()
@@ -553,6 +558,7 @@ public class MainActivity extends AppCompatActivity implements
 
         mGroupId = group.getId();
         mBundle.putString("group_id", group.getId());
+        mCurrentGroupName.setText(group.getName());
         initializeInviteButtonListener();
         initializeAdapter();
 
