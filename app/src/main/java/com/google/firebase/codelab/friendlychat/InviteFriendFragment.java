@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
@@ -23,6 +24,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
+import java.util.HashSet;
 
 import static com.google.firebase.codelab.friendlychat.MainActivity.BUNDLE_UID_KEY;
 import static com.google.firebase.codelab.friendlychat.MainActivity.FRIENDS_CHILD;
@@ -47,6 +49,7 @@ public class InviteFriendFragment extends Fragment {
     private Context mContext;
     private Fragment mFragment;
     private Bundle mBundle;
+    private HashSet<String> mInvitedUsers;
 
     public InviteFriendFragment() {
         // Required empty public constructor
@@ -64,17 +67,19 @@ public class InviteFriendFragment extends Fragment {
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         mDatabaseReference = mFirebaseDatabase.getReference();
         mContext = getContext();
+        //TODO: remove mFragment
         mFragment = this;
         mUserIndex = new HashMap<>();
         mBundle = getArguments();
+        mInvitedUsers = new HashSet<>();
 
-        initializeHashMap();
+        initializeHash();
         initializeFirebaseAdapter();
 
         return view;
     }
 
-    public void initializeHashMap() {
+    public void initializeHash() {
         DatabaseReference friendRef = mDatabaseReference.child(USER_CHILD);
         friendRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -83,6 +88,7 @@ public class InviteFriendFragment extends Fragment {
                     User user = data.getValue(User.class);
                     String key = data.getKey();
                     mUserIndex.put(key, user);
+                    mInvitedUsers.add(user.getUid());
                 }
             }
 
@@ -98,6 +104,7 @@ public class InviteFriendFragment extends Fragment {
         FirebaseRecyclerOptions<String> options = new FirebaseRecyclerOptions.Builder<String>()
                 .setQuery(friendRef, String.class).build();
 
+        // TODO: Change background color of view of invited friends
         mFirebaseAdapter = new FirebaseRecyclerAdapter<String, FriendViewHolder>(options) {
             @Override
             protected void onBindViewHolder(FriendViewHolder viewHodler, int position, String uid) {
@@ -152,15 +159,19 @@ public class InviteFriendFragment extends Fragment {
 
     private void addFriendToGroup(String friendUid) {
         String groupId = mBundle.getString("group_id");
-        mDatabaseReference
-                .child(GROUP_CHILD)
-                .child(groupId)
-                .child("user")
-                .push().setValue(friendUid);
-        mDatabaseReference
-                .child(JOIN_CHILD)
-                .child(friendUid)
-                .push().setValue(groupId);
+        if (mInvitedUsers.contains(groupId)) {
+            Toast.makeText(getContext(), "Already invited", Toast.LENGTH_SHORT).show();
+        } else {
+            mDatabaseReference
+                    .child(GROUP_CHILD)
+                    .child(groupId)
+                    .child("user")
+                    .push().setValue(friendUid);
+            mDatabaseReference
+                    .child(JOIN_CHILD)
+                    .child(friendUid)
+                    .push().setValue(groupId);
+        }
     }
 
     @Override
