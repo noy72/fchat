@@ -29,6 +29,9 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import static com.google.firebase.codelab.friendlychat.MainActivity.GROUP_CHILD;
+import static com.google.firebase.codelab.friendlychat.MainActivity.JOIN_CHILD;
+
 /**
  * A simple {@link Fragment} subclass.
  */
@@ -36,9 +39,6 @@ public class GroupListFragment extends Fragment {
 
     private final int REQUEST_CODE = 100;
     private final String TAG = "GroupListFragment";
-    private final String GROUP_CHILD = "groups";
-    private final String JOIN_CHILD = "join";
-    private final String MAX_GROUP_ID = "maxGroupId";
 
     private View mView; // for findViewById
     private RecyclerView mRecyclerView;
@@ -117,12 +117,7 @@ public class GroupListFragment extends Fragment {
         SnapshotParser<Group> parser = new SnapshotParser<Group>() {
             @Override
             public Group parseSnapshot(DataSnapshot dataSnapshot) {
-                Group group = dataSnapshot.getValue(Group.class);
-                if (group != null) {
-                    // TODO: implement
-                    // group.setId();
-                }
-                return group;
+                return dataSnapshot.getValue(Group.class);
             }
         };
 
@@ -199,22 +194,18 @@ public class GroupListFragment extends Fragment {
     }
 
     public void addGroupToDatabase(final String groupName) {
-        mDatabaseReference.child(MAX_GROUP_ID).addListenerForSingleValueEvent(new ValueEventListener() {
+        mDatabaseReference.child("groups").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                long maxGroupId = dataSnapshot.getValue(Long.class);
-
                 // add new group
-                mDatabaseReference
+                DatabaseReference ref = mDatabaseReference
                         .child(GROUP_CHILD)
-                        .push()
-                        .setValue(new Group(maxGroupId, groupName, mUid));
+                        .push();
+                ref.setValue(new Group(ref.getKey(), groupName));
+                ref.child("user").push().setValue(mUid);
 
                 // add group to user's group list
-                mDatabaseReference.child(JOIN_CHILD).child(mUid).push().setValue(maxGroupId);
-
-                // increment maxGroupId
-                mDatabaseReference.child(MAX_GROUP_ID).setValue(maxGroupId + 1);
+                mDatabaseReference.child(JOIN_CHILD).child(mUid).push().setValue(ref.getKey());
             }
 
             @Override

@@ -12,7 +12,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
@@ -25,7 +24,10 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
 
+import static com.google.firebase.codelab.friendlychat.MainActivity.BUNDLE_UID_KEY;
 import static com.google.firebase.codelab.friendlychat.MainActivity.FRIENDS_CHILD;
+import static com.google.firebase.codelab.friendlychat.MainActivity.GROUP_CHILD;
+import static com.google.firebase.codelab.friendlychat.MainActivity.JOIN_CHILD;
 import static com.google.firebase.codelab.friendlychat.MainActivity.USER_CHILD;
 
 
@@ -34,7 +36,6 @@ import static com.google.firebase.codelab.friendlychat.MainActivity.USER_CHILD;
  */
 public class InviteFriendFragment extends Fragment {
 
-    private TextView mTextView;
     private RecyclerView mRecyclerView;
     private FirebaseRecyclerAdapter<String, FriendViewHolder> mFirebaseAdapter;
     private LinearLayoutManager mLinearLayoutManager;
@@ -42,9 +43,10 @@ public class InviteFriendFragment extends Fragment {
     private FragmentManager mFragmentManager;
     private FirebaseDatabase mFirebaseDatabase;
     private DatabaseReference mDatabaseReference;
-    private String mUid;
     private HashMap<String, User> mUserIndex;
     private Context mContext;
+    private Fragment mFragment;
+    private Bundle mBundle;
 
     public InviteFriendFragment() {
         // Required empty public constructor
@@ -55,15 +57,16 @@ public class InviteFriendFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_invite, container, false);
-        mTextView = view.findViewById(R.id.inviteTextView);
         mRecyclerView = view.findViewById(R.id.inviteRecyclerView);
         mProgressBar = view.findViewById(R.id.progressBar);
         mLinearLayoutManager = new LinearLayoutManager(getContext());
+        mFragmentManager = getFragmentManager();
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         mDatabaseReference = mFirebaseDatabase.getReference();
         mContext = getContext();
+        mFragment = this;
         mUserIndex = new HashMap<>();
-        setUid();
+        mBundle = getArguments();
 
         initializeHashMap();
         initializeFirebaseAdapter();
@@ -91,7 +94,7 @@ public class InviteFriendFragment extends Fragment {
     }
 
     public void initializeFirebaseAdapter() {
-        DatabaseReference friendRef = mDatabaseReference.child(FRIENDS_CHILD).child(mUid);
+        DatabaseReference friendRef = mDatabaseReference.child(FRIENDS_CHILD).child(mBundle.getString(BUNDLE_UID_KEY));
         FirebaseRecyclerOptions<String> options = new FirebaseRecyclerOptions.Builder<String>()
                 .setQuery(friendRef, String.class).build();
 
@@ -117,7 +120,16 @@ public class InviteFriendFragment extends Fragment {
             @Override
             public FriendViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
                 LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
-                return new FriendViewHolder(inflater.inflate(R.layout.item_friend, viewGroup, false));
+                FriendViewHolder viewHolder = new FriendViewHolder(inflater.inflate(R.layout.item_friend, viewGroup, false));
+
+                viewHolder.setOnClickListener(new FriendViewHolder.ClickListener() {
+                    @Override
+                    public void onItemClick(View view, int position) {
+                        addFriendToGroup(mFirebaseAdapter.getItem(position));
+                        mFragmentManager.beginTransaction().remove(mFragment).commit();
+                    }
+                });
+                return viewHolder;
             }
         };
         mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
@@ -138,9 +150,17 @@ public class InviteFriendFragment extends Fragment {
         mRecyclerView.setAdapter(mFirebaseAdapter);
     }
 
-    private void setUid() {
-        Bundle bundle = getArguments();
-        mUid = bundle.getString("uid");
+    private void addFriendToGroup(String friendUid) {
+        String groupId = mBundle.getString("group_id");
+        mDatabaseReference
+                .child(GROUP_CHILD)
+                .child(groupId)
+                .child("user")
+                .push().setValue(friendUid);
+        mDatabaseReference
+                .child(JOIN_CHILD)
+                .child(friendUid)
+                .push().setValue(groupId);
     }
 
     @Override
