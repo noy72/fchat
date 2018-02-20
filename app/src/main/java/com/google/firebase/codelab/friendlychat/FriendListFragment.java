@@ -176,9 +176,20 @@ public class FriendListFragment extends Fragment {
             @Override
             public FriendViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
                 LayoutInflater inflater = LayoutInflater.from(viewGroup.getContext());
-                return new FriendViewHolder(inflater.inflate(R.layout.item_friend, viewGroup, false));
-            }
+                FriendViewHolder viewHolder = new FriendViewHolder(inflater.inflate(R.layout.item_friend, viewGroup, false));
+
+                viewHolder.setOnClickListener(new FriendViewHolder.ClickListener() {
+                    @Override
+                    public void onItemClick(View view, int position) {
+                        // TODO: implement click event
+                        Toast.makeText(getActivity(), "click", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+                return viewHolder;
+            };
         };
+
         mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
             public void onItemRangeInserted(int positionStart, int itemCount) {
