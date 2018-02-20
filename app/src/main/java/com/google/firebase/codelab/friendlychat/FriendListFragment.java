@@ -48,7 +48,6 @@ public class FriendListFragment extends Fragment {
     private Context mContext;
     private Button mSearchButton;
     private EditText mMailAddress;
-    private View mView; // view for findViewById
     private Bundle mBundle;
     private HashMap<String, User> mUserIndex;
 
@@ -60,24 +59,17 @@ public class FriendListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        mView = inflater.inflate(R.layout.fragment_friend_list, container, false);
-        return mView;
-    }
-
-    @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        Toast.makeText(getContext(), "test", Toast.LENGTH_SHORT).show();
+        View view = inflater.inflate(R.layout.fragment_friend_list, container, false);
 
         mUserIndex = new HashMap<>();
-        mProgressBar = mView.findViewById(R.id.progressBar);
+        mProgressBar = view.findViewById(R.id.progressBar);
         mLinearLayoutManager = new LinearLayoutManager(getContext());
         mContext = getContext();
         mBundle = getArguments();
         mFirebaseDatabase = FirebaseDatabase.getInstance();
         mDatabaseReference = mFirebaseDatabase.getReference();
 
-        mMailAddress = mView.findViewById(R.id.mailAddress);
+        mMailAddress = view.findViewById(R.id.mailAddress);
         //TODO: set Filter (or not)
         mMailAddress.setFilters(new InputFilter[]{new InputFilter.LengthFilter(100)});
         mMailAddress.addTextChangedListener(new TextWatcher() {
@@ -99,7 +91,7 @@ public class FriendListFragment extends Fragment {
             }
         });
 
-        mSearchButton = mView.findViewById(R.id.searchButton);
+        mSearchButton = view.findViewById(R.id.searchButton);
         mSearchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -133,7 +125,9 @@ public class FriendListFragment extends Fragment {
         });
 
         initializeHashMap();
-        initializeFirebaseAdapter();
+        initializeFirebaseAdapter(view);
+
+        return view;
     }
 
     public void initializeHashMap() {
@@ -155,7 +149,7 @@ public class FriendListFragment extends Fragment {
         });
     }
 
-    public void initializeFirebaseAdapter() {
+    public void initializeFirebaseAdapter(View view) {
         DatabaseReference friendRef = mDatabaseReference.child(FRIENDS_CHILD).child(mBundle.getString("uid"));
         FirebaseRecyclerOptions<String> options = new FirebaseRecyclerOptions.Builder<String>()
                 .setQuery(friendRef, String.class).build();
@@ -199,11 +193,10 @@ public class FriendListFragment extends Fragment {
             }
         });
 
-        mRecyclerView = mView.findViewById(R.id.friendRecyclerView);
+        mRecyclerView = view.findViewById(R.id.friendRecyclerView);
         mRecyclerView.setLayoutManager(mLinearLayoutManager);
         mRecyclerView.setAdapter(mFirebaseAdapter);
     }
-
 
     public void showRegistrationDialog(final User user) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
