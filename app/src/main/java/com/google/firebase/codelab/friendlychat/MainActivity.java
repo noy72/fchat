@@ -330,19 +330,19 @@ public class MainActivity extends AppCompatActivity implements
 
 
         mFragmentManager = getSupportFragmentManager();
+        initializeNavigationButtons();
+    }
 
-        // Generate click listener for navigation button.
+    // Generate click listener for navigation button.
+    private void initializeNavigationButtons() {
+        final Bundle bundle = new Bundle();
+        bundle.putString("uid", mFirebaseUser.getUid());
+
         findViewById(R.id.navigation_button_friends).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                System.out.println("click");
-
-                Bundle bundle = new Bundle();
-                bundle.putString("uid", mFirebaseUser.getUid());
-
                 FriendListFragment fragment = new FriendListFragment();
                 fragment.setArguments(bundle);
-
                 mFragmentManager.beginTransaction()
                         .replace(R.id.fragment_container, fragment)
                         .commit();
@@ -352,18 +352,23 @@ public class MainActivity extends AppCompatActivity implements
         findViewById(R.id.navigation_button_groups).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Bundle bundle = new Bundle();
-                bundle.putString("uid", mFirebaseUser.getUid());
-
                 GroupListFragment fragment = new GroupListFragment();
                 fragment.setArguments(bundle);
-
                 mFragmentManager.beginTransaction()
                         .replace(R.id.fragment_container, fragment)
                         .commit();
             }
         });
-
+        findViewById(R.id.navigation_button_invite).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                InviteFriendFragment fragment = new InviteFriendFragment();
+                fragment.setArguments(bundle);
+                mFragmentManager.beginTransaction()
+                        .replace(R.id.fragment_container, fragment)
+                        .commit();
+            }
+        });
     }
 
     private void initializeAdapter() {
