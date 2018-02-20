@@ -111,6 +111,7 @@ public class MainActivity extends AppCompatActivity implements
     private static final String TAG = "MainActivity";
     public static final String MESSAGES_CHILD = "messages";
     public static final String USER_CHILD = "User";
+    public static final String FRIENDS_CHILD = "friends";
     private static final int REQUEST_INVITE = 1;
     private static final int REQUEST_IMAGE = 2;
     public static final int DEFAULT_MSG_LENGTH_LIMIT = 10;
@@ -362,6 +363,7 @@ public class MainActivity extends AppCompatActivity implements
             }
         });
 
+        // reject invite when mGroupId is INITIAL_GROUP_ID
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle(R.string.dialog_invite_title)
                 .setMessage(R.string.dialog_invite_message)
