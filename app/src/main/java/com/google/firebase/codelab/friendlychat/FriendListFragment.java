@@ -98,14 +98,17 @@ public class FriendListFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 // TODO: Detect when the user has already registered in the friend list
-                // TODO: Do not register oneself.
 
                 String mailAddress = mMailAddress.getText().toString() + "@gmail.com";
                 User user = mAddressUserIndex.get(mailAddress);
                 if (user == null) {
                     Toast.makeText(getContext(), "Address: " + mailAddress + " not found.", Toast.LENGTH_SHORT).show();
                 } else {
-                    showRegistrationDialog(user);
+                    if (user.getUid().equals(mBundle.getString("uid"))) {
+                        Toast.makeText(getContext(), "Do not register oneself", Toast.LENGTH_SHORT).show();
+                    } else {
+                        showRegistrationDialog(user);
+                    }
                 }
             }
         });
