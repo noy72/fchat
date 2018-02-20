@@ -13,9 +13,6 @@ import android.support.v4.app.DialogFragment;
 // https://qiita.com/kojionilk/items/9584c012679f61569995
 
 public class MakeNewGroupDialog extends DialogFragment {
-
-    String mGroupName;
-
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
