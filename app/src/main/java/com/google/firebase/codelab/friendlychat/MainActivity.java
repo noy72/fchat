@@ -23,7 +23,9 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
@@ -83,6 +85,7 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -331,6 +334,18 @@ public class MainActivity extends AppCompatActivity implements
     private void initializeNavigationButtons() {
         mBundle.putString(BUNDLE_UID_KEY, mFirebaseUser.getUid());
         mBundle.putString("group_id", mGroupId);
+
+        findViewById(R.id.navigation_button_chat).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                FragmentTransaction fragmentTransaction = mFragmentManager.beginTransaction();
+                List<Fragment> fragments = mFragmentManager.getFragments();
+                for (Fragment fragment : fragments) {
+                    fragmentTransaction.remove(fragment);
+                }
+                fragmentTransaction.commit();
+            }
+        });
 
         findViewById(R.id.navigation_button_friends).setOnClickListener(new View.OnClickListener() {
             @Override
