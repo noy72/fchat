@@ -49,7 +49,8 @@ public class FriendListFragment extends Fragment {
     private Button mSearchButton;
     private EditText mMailAddress;
     private Bundle mBundle;
-    private HashMap<String, User> mUserIndex;
+    private HashMap<String, User> mUidUserIndex;
+    private HashMap<String, User> mAddressUserIndex;
 
     public FriendListFragment() {
         // Required empty public constructor
@@ -61,7 +62,8 @@ public class FriendListFragment extends Fragment {
 
         View view = inflater.inflate(R.layout.fragment_friend_list, container, false);
 
-        mUserIndex = new HashMap<>();
+        mUidUserIndex = new HashMap<>();
+        mAddressUserIndex = new HashMap<>();
         mProgressBar = view.findViewById(R.id.progressBar);
         mLinearLayoutManager = new LinearLayoutManager(getContext());
         mContext = getContext();
@@ -95,30 +97,16 @@ public class FriendListFragment extends Fragment {
         mSearchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final String mailAddress = mMailAddress.getText().toString() + "@gmail.com";
-                DatabaseReference ref = mFirebaseDatabase.getReference();
+                // TODO: Detect when the user has already registered in the friend list
+                // TODO: Do not register oneself.
 
-                ref.child(USER_CHILD).addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        // TODO: Linear search is slow. There should be other good implementations.
-                        // TODO: Detect when the user has already registered in the friend list
-                        // TODO: Do not register oneself.
-                        for (DataSnapshot data: dataSnapshot.getChildren()){
-                            User user = data.getValue(User.class);
-                            if (mailAddress.equals(user.getMail())) {
-                                showRegistrationDialog(user);
-                                return;
-                            }
-                        }
-                        Toast.makeText(getContext(), "Address: " + mailAddress + " not found.", Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        throw new RuntimeException("The read failed: " + databaseError.getCode());
-                    }
-                });
+                String mailAddress = mMailAddress.getText().toString() + "@gmail.com";
+                User user = mAddressUserIndex.get(mailAddress);
+                if (user == null) {
+                    Toast.makeText(getContext(), "Address: " + mailAddress + " not found.", Toast.LENGTH_SHORT).show();
+                } else {
+                    showRegistrationDialog(user);
+                }
             }
         });
 
@@ -135,8 +123,8 @@ public class FriendListFragment extends Fragment {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot data : dataSnapshot.getChildren()) {
                     User user = data.getValue(User.class);
-                    String key = data.getKey();
-                    mUserIndex.put(key, user);
+                    mUidUserIndex.put(data.getKey(), user);
+                    mAddressUserIndex.put(user.getMail(), user);
                 }
             }
 
@@ -156,7 +144,7 @@ public class FriendListFragment extends Fragment {
             @Override
             protected void onBindViewHolder(FriendViewHolder viewHodler, int position, String uid) {
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
-                User user = mUserIndex.get(uid);
+                User user = mUidUserIndex.get(uid);
                 if (user.getName() != null) {
                     viewHodler.mFriendName.setText(user.getName());
                 }
