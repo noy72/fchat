@@ -15,6 +15,7 @@
  */
 package com.google.firebase.codelab.friendlychat;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
@@ -27,6 +28,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -359,14 +361,30 @@ public class MainActivity extends AppCompatActivity implements
                         .commit();
             }
         });
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.dialog_invite_title)
+                .setMessage(R.string.dialog_invite_message)
+                .setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        // do nothing
+                    }
+                });
+        final AlertDialog dialog = builder.create();
+
         findViewById(R.id.navigation_button_invite).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                InviteFriendFragment fragment = new InviteFriendFragment();
-                fragment.setArguments(bundle);
-                mFragmentManager.beginTransaction()
-                        .replace(R.id.fragment_container, fragment)
-                        .commit();
+                if (mGroupId == INITIAL_GROUP_ID) {
+                    dialog.show();
+                } else {
+                    InviteFriendFragment fragment = new InviteFriendFragment();
+                    fragment.setArguments(bundle);
+                    mFragmentManager.beginTransaction()
+                            .replace(R.id.fragment_container, fragment)
+                            .commit();
+                }
             }
         });
     }

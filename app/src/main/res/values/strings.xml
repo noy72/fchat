@@ -26,6 +26,8 @@
     <string name="make_group_message">Do you make a new group?</string>
     <string name="enter_group_name">Please enter a group name.</string>
     <string name="group_name">Groupname</string>
+    <string name="dialog_invite_title">Invite friend</string>
+    <string name="dialog_invite_message">Please select a group from GROUPS buton.</string>
     <string name="domain">\@gmail.com</string>
 
     <!-- TODO: Remove or change this placeholder text -->
