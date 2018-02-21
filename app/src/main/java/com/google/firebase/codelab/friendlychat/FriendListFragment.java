@@ -32,6 +32,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import static com.google.firebase.codelab.friendlychat.MainActivity.BUNDLE_UID_KEY;
 import static com.google.firebase.codelab.friendlychat.MainActivity.FRIENDS_CHILD;
 import static com.google.firebase.codelab.friendlychat.MainActivity.USER_CHILD;
 
@@ -105,7 +106,7 @@ public class FriendListFragment extends Fragment {
                 if (user == null) {
                     Toast.makeText(getContext(), "Address: " + mailAddress + " not found.", Toast.LENGTH_SHORT).show();
                 } else {
-                    if (user.getUid().equals(mBundle.getString("uid"))) {
+                    if (user.getUid().equals(mBundle.getString(BUNDLE_UID_KEY))) {
                         Toast.makeText(getContext(), "Do not register oneself", Toast.LENGTH_SHORT).show();
                     } else {
                         showRegistrationDialog(user);
@@ -141,7 +142,7 @@ public class FriendListFragment extends Fragment {
     }
 
     public void initializeFirebaseAdapter(View view) {
-        DatabaseReference friendRef = mDatabaseReference.child(FRIENDS_CHILD).child(mBundle.getString("uid"));
+        DatabaseReference friendRef = mDatabaseReference.child(FRIENDS_CHILD).child(mBundle.getString(BUNDLE_UID_KEY));
         FirebaseRecyclerOptions<String> options = new FirebaseRecyclerOptions.Builder<String>()
                 .setQuery(friendRef, String.class).build();
 
@@ -212,7 +213,7 @@ public class FriendListFragment extends Fragment {
                         } else {
                             DatabaseReference newRef = mDatabaseReference
                                     .child(FRIENDS_CHILD)
-                                    .child(mBundle.getString("uid"))
+                                    .child(mBundle.getString(BUNDLE_UID_KEY))
                                     .push();
                             newRef.setValue(user.getUid());
 

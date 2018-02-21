@@ -26,6 +26,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import static com.google.firebase.codelab.friendlychat.MainActivity.BUNDLE_GROUP_ID_KEY;
 import static com.google.firebase.codelab.friendlychat.MainActivity.BUNDLE_UID_KEY;
 import static com.google.firebase.codelab.friendlychat.MainActivity.FRIENDS_CHILD;
 import static com.google.firebase.codelab.friendlychat.MainActivity.GROUP_CHILD;
@@ -158,7 +159,7 @@ public class InviteFriendFragment extends Fragment {
     }
 
     private void addFriendToGroup(String friendUid) {
-        String groupId = mBundle.getString("group_id");
+        String groupId = mBundle.getString(BUNDLE_GROUP_ID_KEY);
         if (mInvitedUsers.contains(groupId)) {
             Toast.makeText(getContext(), "Already invited", Toast.LENGTH_SHORT).show();
         } else {

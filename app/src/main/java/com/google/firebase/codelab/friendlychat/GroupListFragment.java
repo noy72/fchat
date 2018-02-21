@@ -28,6 +28,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import static com.google.firebase.codelab.friendlychat.MainActivity.BUNDLE_UID_KEY;
 import static com.google.firebase.codelab.friendlychat.MainActivity.GROUP_CHILD;
 import static com.google.firebase.codelab.friendlychat.MainActivity.JOIN_CHILD;
 
@@ -184,12 +185,12 @@ public class GroupListFragment extends Fragment {
                         .child(GROUP_CHILD)
                         .push();
                 ref.setValue(new Group(ref.getKey(), groupName));
-                ref.child("user").push().setValue(mBundle.getString("uid"));
+                ref.child("user").push().setValue(mBundle.getString(BUNDLE_UID_KEY));
 
                 // add group to user's group list
                 mDatabaseReference
                         .child(JOIN_CHILD)
-                        .child(mBundle.getString("uid"))
+                        .child(mBundle.getString(BUNDLE_UID_KEY))
                         .push().setValue(ref.getKey());
             }
 

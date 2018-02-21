@@ -117,6 +117,7 @@ public class MainActivity extends AppCompatActivity implements
     public static final String GROUP_CHILD = "groups";
     public static final String JOIN_CHILD = "join";
     public static final String BUNDLE_UID_KEY = "uid";
+    public static final String BUNDLE_GROUP_ID_KEY = "group_id";
     private static final int REQUEST_INVITE = 1;
     private static final int REQUEST_IMAGE = 2;
     public static final int DEFAULT_MSG_LENGTH_LIMIT = 10;
@@ -333,7 +334,7 @@ public class MainActivity extends AppCompatActivity implements
     // Generate click listener for navigation button.
     private void initializeNavigationButtons() {
         mBundle.putString(BUNDLE_UID_KEY, mFirebaseUser.getUid());
-        mBundle.putString("group_id", mGroupId);
+        mBundle.putString(BUNDLE_GROUP_ID_KEY, mGroupId);
 
         findViewById(R.id.navigation_button_chat).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -574,7 +575,7 @@ public class MainActivity extends AppCompatActivity implements
         mFirebaseAdapter.stopListening();
 
         mGroupId = group.getId();
-        mBundle.putString("group_id", group.getId());
+        mBundle.putString(BUNDLE_GROUP_ID_KEY, group.getId());
         mCurrentGroupName.setText(group.getName());
         initializeInviteButtonListener();
         initializeAdapter();
